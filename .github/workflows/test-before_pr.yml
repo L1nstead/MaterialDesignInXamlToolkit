@@ -1,0 +1,33 @@
+name: Test Before PR
+
+on:
+    push:
+      branches: [ "testPR" ]
+
+jobs:
+    build:
+        name: Build and Test
+        runs-on: windows-latest
+
+        env:
+            solution: MaterialDesignToolkit.Full.sln
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: |
+                      6.x
+                      8.x
+
+            - name: Restore dependencies
+              run: dotnet restore ${{ env.solution }}
+
+            - name: Build
+              run: dotnet build ${{ env.solution }} --no-restore -p:Platform="Any CPU" -p:TreatWarningsAsErrors=True
+
+            - name: Test
+              timeout-minutes: 20
+              run: dotnet test ${{ env.solution }} --no-build --blame-crash --logger GitHubActions
